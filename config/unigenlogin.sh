@@ -1,0 +1,8 @@
+#!/bin/sh
+
+UNIGEN=${UNIGEN:=${PWD}}
+
+PATH=${UNIGEN}/bin':'${PATH}
+LD_LIBRARY_PATH=${UNIGEN}/lib':'${LD_LIBRARY_PATH}
+
+export UNIGEN PATH LD_LIBRARY_PATH
