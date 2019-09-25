@@ -75,7 +75,6 @@ int main(int argc, char *argv[]) {
   char *inpfile;
   char *outfile;
   char c;
-  int nevents;
   string dust;
 
   URun *ru = 0;
@@ -83,7 +82,7 @@ int main(int argc, char *argv[]) {
   int filetype, eos, aproj, zproj, atarg, ztarg, nr;
   double beta, b, bmin, bmax, sigma, elab, plab, sqrts, time, dtime;
 
-  if (argc != 4) {
+  if (argc < 3 || argc > 4) {
     cout << "usage:   " << argv[0] << " inpfile outfile nevents\n";
     cout << "example: " << argv[0] << " ftn14 ftn14.root 10\n";
     exit(0);
@@ -91,7 +90,7 @@ int main(int argc, char *argv[]) {
 
   inpfile = argv[1];
   outfile = argv[2];
-  nevents = atoi(argv[3]);
+  const int nevents = (argc == 4) ? atoi(argv[3]) : 1e8;
 
   int nout=0;
   in.open(inpfile);
@@ -123,13 +122,15 @@ int main(int argc, char *argv[]) {
     in.ignore(777,'\n'); // ignore the rest of the line
 
     comment.clear();
-    // read 3 lines of options and 4 lines of params
-    for (int i=0; i<7; i++) {
-      getline(in,line); 
-      comment.append(line);
-      comment.append("\n");
+    // read options and parameters
+    while (true) {
+      getline(in, line); 
+      if (TString(line).BeginsWith("op") || TString(line).BeginsWith("pa")) {
+        comment.append(line);
+        comment.append("\n");
+      } else
+        break;
     }
-    in.ignore(777,'\n'); 
 
     ev->Clear();
     ev->SetEventNr(nr);
@@ -186,9 +187,15 @@ int main(int argc, char *argv[]) {
   double m = 0.938271998;
   double ecm = sqrts/2; // energy per nucleon in cm
   double pcm = sqrt(ecm*ecm-m*m); // momentum per nucleon in cm
-  double gamma = 1.0/sqrt(1-beta*beta); 
-  double pproj = gamma*(+pcm-beta*ecm);
-  double ptarg = gamma*(-pcm-beta*ecm);
+  double pproj = 0.0;
+  double ptarg = 0.0;
+  if (fabs(beta) < 1e-8) { // we are in CM
+    pproj = pcm;
+    ptarg = -pcm;
+  } else {
+    pproj = plab;
+    ptarg = 0.0;
+  }
   ru = new URun(generator.data(), comment.data(), 
 		aproj, zproj, pproj, 
 		atarg, ztarg, ptarg, 
@@ -196,7 +203,6 @@ int main(int argc, char *argv[]) {
   ru->Write();
   fi->Write();
   fi->Close();
-  return nout;
   return 0;
 }
 /*****************************************************************************/

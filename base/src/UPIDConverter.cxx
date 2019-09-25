@@ -85,12 +85,12 @@ void UPIDConverter::LoadConversionTable(const EConvention pidType)
   }
 
   const std::string unigenBase = gSystem->Getenv("UNIGEN");
-  const char* fullFileName = (unigenBase + dataFileName).c_str();
+  const std::string fullFileName = unigenBase + dataFileName;
   std::ifstream fin;
-  fin.open(fullFileName);
+  fin.open(fullFileName.c_str());
   if (!fin) {
     Error("LoadConversionTable",
-          "Failed to open conversion-table file %s", fullFileName);
+          "Failed to open conversion-table file %s", fullFileName.c_str());
     return;
   }
 
